@@ -1,0 +1,171 @@
+{
+  "name": "Intelligent Product Recommendation Flow",
+  "description": "AI-powered conversational product recommendations for WooCommerce",
+  "version": "1.0.0",
+  "nodes": [
+    {
+      "id": "input_node",
+      "type": "TextInput",
+      "data": {
+        "name": "User Query",
+        "description": "User's product search query",
+        "placeholder": "What are you looking for?"
+      },
+      "position": {"x": 100, "y": 100}
+    },
+    {
+      "id": "context_node", 
+      "type": "TextInput",
+      "data": {
+        "name": "Context Data",
+        "description": "User context and product data from AstraDB",
+        "placeholder": "JSON context data"
+      },
+      "position": {"x": 100, "y": 200}
+    },
+    {
+      "id": "intent_classifier",
+      "type": "LLMChain",
+      "data": {
+        "llm": {
+          "type": "OpenAI",
+          "model": "gpt-3.5-turbo",
+          "temperature": 0.3
+        },
+        "prompt": {
+          "template": "Analyze the user's query and classify their intent. Consider:\n\nUser Query: {query}\nContext: {context}\n\nClassify the intent as one of:\n1. PRODUCT_SEARCH - Looking for specific products\n2. COMPARISON - Comparing products\n3. RECOMMENDATION - Asking for suggestions\n4. INFORMATION - Asking about product details\n5. BUDGET_INQUIRY - Price-related questions\n6. ACCESSIBILITY - Accessibility-focused needs\n\nProvide:\n- Intent: [classification]\n- Confidence: [0-1]\n- Key entities: [extracted entities]\n- User needs: [inferred needs]",
+          "input_variables": ["query", "context"]
+        }
+      },
+      "position": {"x": 300, "y": 150}
+    },
+    {
+      "id": "recommendation_generator",
+      "type": "LLMChain", 
+      "data": {
+        "llm": {
+          "type": "OpenAI",
+          "model": "gpt-3.5-turbo",
+          "temperature": 0.7
+        },
+        "prompt": {
+          "template": "You are an expert product recommendation assistant for EnableMart, specializing in accessibility and mobility products.\n\nUser Query: {query}\nIntent Analysis: {intent}\nProduct Context: {context}\n\nGenerate a helpful, conversational response that:\n1. Acknowledges the user's needs\n2. Highlights the best matching products\n3. Explains why these products are suitable\n4. Asks follow-up questions if needed\n5. Maintains a friendly, supportive tone\n\nFocus on accessibility benefits and user-specific needs. Be concise but informative.\n\nResponse:",
+          "input_variables": ["query", "intent", "context"]
+        }
+      },
+      "position": {"x": 500, "y": 150}
+    },
+    {
+      "id": "suggestion_generator",
+      "type": "LLMChain",
+      "data": {
+        "llm": {
+          "type": "OpenAI", 
+          "model": "gpt-3.5-turbo",
+          "temperature": 0.5
+        },
+        "prompt": {
+          "template": "Based on the user query and available products, generate 3 helpful follow-up suggestions.\n\nUser Query: {query}\nProducts Found: {context}\n\nGenerate suggestions that help the user:\n1. Refine their search\n2. Explore related categories\n3. Get more specific information\n\nFormat as a JSON array of strings, max 6 words each:\n[\"suggestion 1\", \"suggestion 2\", \"suggestion 3\"]",
+          "input_variables": ["query", "context"]
+        }
+      },
+      "position": {"x": 500, "y": 300}
+    },
+    {
+      "id": "response_formatter",
+      "type": "PythonFunction",
+      "data": {
+        "function": "def format_response(recommendation, suggestions, intent):\n    import json\n    \n    try:\n        suggestions_list = json.loads(suggestions)\n    except:\n        suggestions_list = [\"Tell me more\", \"Show similar items\", \"Check availability\"]\n    \n    return {\n        \"response\": recommendation.strip(),\n        \"suggestions\": suggestions_list[:3],\n        \"intent\": intent\n    }",
+        "input_variables": ["recommendation", "suggestions", "intent"]
+      },
+      "position": {"x": 700, "y": 200}
+    },
+    {
+      "id": "output_node",
+      "type": "Output",
+      "data": {
+        "name": "Recommendation Response"
+      },
+      "position": {"x": 900, "y": 200}
+    }
+  ],
+  "edges": [
+    {
+      "source": "input_node",
+      "target": "intent_classifier",
+      "sourceHandle": "output",
+      "targetHandle": "query"
+    },
+    {
+      "source": "context_node", 
+      "target": "intent_classifier",
+      "sourceHandle": "output",
+      "targetHandle": "context"
+    },
+    {
+      "source": "input_node",
+      "target": "recommendation_generator", 
+      "sourceHandle": "output",
+      "targetHandle": "query"
+    },
+    {
+      "source": "context_node",
+      "target": "recommendation_generator",
+      "sourceHandle": "output", 
+      "targetHandle": "context"
+    },
+    {
+      "source": "intent_classifier",
+      "target": "recommendation_generator",
+      "sourceHandle": "output",
+      "targetHandle": "intent"
+    },
+    {
+      "source": "input_node",
+      "target": "suggestion_generator",
+      "sourceHandle": "output",
+      "targetHandle": "query"
+    },
+    {
+      "source": "context_node",
+      "target": "suggestion_generator", 
+      "sourceHandle": "output",
+      "targetHandle": "context"
+    },
+    {
+      "source": "recommendation_generator",
+      "target": "response_formatter",
+      "sourceHandle": "output",
+      "targetHandle": "recommendation"
+    },
+    {
+      "source": "suggestion_generator",
+      "target": "response_formatter",
+      "sourceHandle": "output", 
+      "targetHandle": "suggestions"
+    },
+    {
+      "source": "intent_classifier",
+      "target": "response_formatter",
+      "sourceHandle": "output",
+      "targetHandle": "intent"
+    },
+    {
+      "source": "response_formatter",
+      "target": "output_node",
+      "sourceHandle": "output",
+      "targetHandle": "input"
+    }
+  ],
+  "metadata": {
+    "created_at": "2025-01-06T06:02:25Z",
+    "created_by": "Cascade AI",
+    "tags": ["woocommerce", "recommendations", "accessibility", "conversational-ai"],
+    "use_cases": [
+      "Product search assistance",
+      "Accessibility-focused recommendations", 
+      "Conversational product discovery",
+      "Context-aware suggestions"
+    ]
+  }
+}
