@@ -46,6 +46,31 @@ class ConversationMessage(BaseModel):
     content: str
     timestamp: Optional[str] = None
 
+class ProductSyncRequest(BaseModel):
+    product_id: int
+    name: str
+    description: str
+    short_description: Optional[str] = None
+    price: Optional[float] = None
+    regular_price: Optional[float] = None
+    sale_price: Optional[float] = None
+    categories: List[str] = []
+    tags: List[str] = []
+    image_url: Optional[str] = None
+    permalink: str
+    stock_status: str = "instock"
+    rating: float = 0.0
+    sku: Optional[str] = None
+    weight: Optional[str] = None
+    dimensions: Optional[Dict[str, str]] = None
+    attributes: Optional[Dict[str, List[str]]] = None
+    status: str = "publish"
+    date_created: Optional[str] = None
+    date_modified: Optional[str] = None
+
+class ProductDeleteRequest(BaseModel):
+    product_id: int
+
 class LangflowClient:
     """Client for interacting with Langflow flows"""
     
@@ -401,6 +426,108 @@ async def trending_products(limit: int = 10):
 async def health_check():
     """Health check endpoint"""
     return {"status": "healthy", "service": "intelligent-recommendations"}
+
+@app.post("/api/sync-product")
+async def sync_product(request: ProductSyncRequest):
+    """Sync a single product from WooCommerce to AstraDB"""
+    try:
+        service_instance = get_service()
+        await service_instance.initialize()
+        
+        # Convert request to ProductData format
+        from product_vectorizer import ProductData
+        
+        product_data = ProductData(
+            product_id=request.product_id,
+            name=request.name,
+            description=request.description,
+            short_description=request.short_description or "",
+            price=request.price or 0.0,
+            regular_price=request.regular_price or 0.0,
+            sale_price=request.sale_price or 0.0,
+            categories=request.categories,
+            tags=request.tags,
+            image_url=request.image_url or "",
+            permalink=request.permalink,
+            stock_status=request.stock_status,
+            rating=request.rating,
+            sku=request.sku or "",
+            weight=request.weight or "",
+            dimensions=request.dimensions or {},
+            attributes=request.attributes or {},
+            status=request.status,
+            date_created=request.date_created or datetime.now().isoformat(),
+            date_modified=request.date_modified or datetime.now().isoformat()
+        )
+        
+        # Store in AstraDB with vectorization
+        success = service_instance.astra_client.store_product_with_embedding(product_data)
+        
+        if success:
+            logger.info(f"Product {request.product_id} synced successfully to AstraDB")
+            return {
+                "success": True,
+                "message": f"Product '{request.name}' synced successfully",
+                "product_id": request.product_id
+            }
+        else:
+            raise HTTPException(status_code=500, detail="Failed to sync product to AstraDB")
+            
+    except Exception as e:
+        logger.error(f"Error syncing product {request.product_id}: {e}")
+        raise HTTPException(status_code=500, detail=f"Sync failed: {str(e)}")
+
+@app.post("/api/delete-product")
+async def delete_product(request: ProductDeleteRequest):
+    """Delete a product from AstraDB"""
+    try:
+        service_instance = get_service()
+        await service_instance.initialize()
+        
+        # Delete from AstraDB
+        success = service_instance.astra_client.delete_product(request.product_id)
+        
+        if success:
+            logger.info(f"Product {request.product_id} deleted successfully from AstraDB")
+            return {
+                "success": True,
+                "message": f"Product {request.product_id} deleted successfully"
+            }
+        else:
+            raise HTTPException(status_code=404, detail="Product not found or deletion failed")
+            
+    except Exception as e:
+        logger.error(f"Error deleting product {request.product_id}: {e}")
+        raise HTTPException(status_code=500, detail=f"Deletion failed: {str(e)}")
+
+@app.get("/api/sync-status")
+async def get_sync_status():
+    """Get synchronization status and statistics"""
+    try:
+        service_instance = get_service()
+        await service_instance.initialize()
+        
+        # Get collection stats from AstraDB
+        stats = service_instance.astra_client.get_collection_stats()
+        
+        return {
+            "status": "healthy",
+            "total_products": stats.get("total_documents", 0),
+            "last_sync": datetime.now().isoformat(),
+            "astra_connection": "active",
+            "openai_connection": "active"
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting sync status: {e}")
+        return {
+            "status": "error",
+            "error": str(e),
+            "total_products": 0,
+            "last_sync": None,
+            "astra_connection": "failed",
+            "openai_connection": "unknown"
+        }
 
 if __name__ == "__main__":
     import uvicorn

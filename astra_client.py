@@ -401,6 +401,109 @@ class IntelligentAstraClient:
         except Exception as e:
             logger.error(f"Error getting product recommendations: {e}")
             return []
+    
+    def store_product_with_embedding(self, product_data) -> bool:
+        """Store product with generated embedding in AstraDB"""
+        try:
+            # Generate embedding for product description
+            description_text = f"{product_data.name} {product_data.description} {' '.join(product_data.categories)} {' '.join(product_data.tags)}"
+            embedding = self.generate_query_embedding(description_text)
+            
+            if not embedding:
+                logger.error(f"Failed to generate embedding for product {product_data.product_id}")
+                return False
+            
+            # Prepare document for AstraDB
+            document = {
+                "product_id": product_data.product_id,
+                "name": product_data.name,
+                "description": product_data.description,
+                "short_description": product_data.short_description,
+                "price": str(product_data.price),
+                "regular_price": str(product_data.regular_price),
+                "sale_price": str(product_data.sale_price),
+                "categories": product_data.categories,
+                "tags": product_data.tags,
+                "image_url": product_data.image_url,
+                "permalink": product_data.permalink,
+                "stock_status": product_data.stock_status,
+                "rating": product_data.rating,
+                "sku": product_data.sku,
+                "weight": product_data.weight,
+                "dimensions": product_data.dimensions,
+                "attributes": product_data.attributes,
+                "status": product_data.status,
+                "date_created": product_data.date_created,
+                "date_modified": product_data.date_modified,
+                "$vector": embedding
+            }
+            
+            # Upsert the document (insert or update)
+            result = self.products_collection.upsert(
+                document,
+                filter={"product_id": product_data.product_id}
+            )
+            
+            logger.info(f"Product {product_data.product_id} stored successfully in AstraDB")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error storing product {product_data.product_id}: {e}")
+            return False
+    
+    def delete_product(self, product_id: int) -> bool:
+        """Delete product from AstraDB"""
+        try:
+            result = self.products_collection.delete_one(
+                filter={"product_id": product_id}
+            )
+            
+            if result.deleted_count > 0:
+                logger.info(f"Product {product_id} deleted successfully from AstraDB")
+                return True
+            else:
+                logger.warning(f"Product {product_id} not found in AstraDB")
+                return False
+                
+        except Exception as e:
+            logger.error(f"Error deleting product {product_id}: {e}")
+            return False
+    
+    def get_collection_stats(self) -> Dict[str, Any]:
+        """Get statistics about the products collection"""
+        try:
+            # Get total document count
+            total_docs = self.products_collection.count_documents({})
+            
+            # Get recent products count (last 30 days)
+            thirty_days_ago = (datetime.utcnow() - timedelta(days=30)).isoformat()
+            recent_docs = self.products_collection.count_documents({
+                "date_modified": {"$gte": thirty_days_ago}
+            })
+            
+            # Get products by status
+            published_docs = self.products_collection.count_documents({
+                "status": "publish"
+            })
+            
+            return {
+                "total_documents": total_docs,
+                "recent_documents": recent_docs,
+                "published_documents": published_docs,
+                "collection_name": "woo_products",
+                "last_updated": datetime.utcnow().isoformat()
+            }
+            
+        except Exception as e:
+            logger.error(f"Error getting collection stats: {e}")
+            return {
+                "total_documents": 0,
+                "recent_documents": 0,
+                "published_documents": 0,
+                "collection_name": "woo_products",
+                "last_updated": datetime.utcnow().isoformat(),
+                "error": str(e)
+            }
 
 # Example usage and testing
 async def test_astra_client():
