@@ -335,13 +335,20 @@ class IntelligentRecommendationService:
 
 # FastAPI app for the service
 app = FastAPI(title="Intelligent Product Recommendations", version="1.0.0")
-service = IntelligentRecommendationService()
+service = None
+
+def get_service():
+    """Get or create the service instance"""
+    global service
+    if service is None:
+        service = IntelligentRecommendationService()
+    return service
 
 @app.post("/api/intelligent-search", response_model=RecommendationResponse)
 async def intelligent_search(request: QueryRequest):
     """Intelligent product search with conversational AI"""
     try:
-        return await service.get_recommendations(
+        return await get_service().get_recommendations(
             query=request.query,
             session_id=request.session_id,
             limit=request.limit,
@@ -359,7 +366,7 @@ async def product_recommendations(
 ):
     """Get recommendations for a specific product"""
     try:
-        recommendations = await service.get_product_recommendations(
+        recommendations = await get_service().get_product_recommendations(
             product_id=product_id,
             session_id=session_id,
             limit=limit
@@ -373,7 +380,7 @@ async def product_recommendations(
 async def trending_products(limit: int = 10):
     """Get trending products"""
     try:
-        trending = await service.get_trending_products(limit=limit)
+        trending = await get_service().get_trending_products(limit=limit)
         return {"products": trending}
     except Exception as e:
         logger.error(f"Error getting trending products: {e}")
