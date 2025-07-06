@@ -410,45 +410,24 @@ class IntelligentAstraClient:
             embedding = self.generate_query_embedding(description_text)
             
             if not embedding:
-                logger.error(f"Failed to generate embedding for product {product_data.product_id}")
+                logger.error(f"Failed to generate embedding for product {product_data.id}")
                 return False
             
-            # Prepare document for AstraDB
-            document = {
-                "product_id": product_data.product_id,
-                "name": product_data.name,
-                "description": product_data.description,
-                "short_description": product_data.short_description,
-                "price": str(product_data.price),
-                "regular_price": str(product_data.regular_price),
-                "sale_price": str(product_data.sale_price),
-                "categories": product_data.categories,
-                "tags": product_data.tags,
-                "image_url": product_data.image_url,
-                "permalink": product_data.permalink,
-                "stock_status": product_data.stock_status,
-                "rating": product_data.rating,
-                "sku": product_data.sku,
-                "weight": product_data.weight,
-                "dimensions": product_data.dimensions,
-                "attributes": product_data.attributes,
-                "status": product_data.status,
-                "date_created": product_data.date_created,
-                "date_modified": product_data.date_modified,
-                "$vector": embedding
-            }
+            # Use the ProductData to_dict method and add vector
+            document = product_data.to_dict()
+            document["$vector"] = embedding
             
             # Upsert the document (insert or update)
             result = self.products_collection.upsert(
                 document,
-                filter={"product_id": product_data.product_id}
+                filter={"product_id": product_data.id}
             )
             
-            logger.info(f"Product {product_data.product_id} stored successfully in AstraDB")
+            logger.info(f"Product {product_data.id} stored successfully in AstraDB")
             return True
             
         except Exception as e:
-            logger.error(f"Error storing product {product_data.product_id}: {e}")
+            logger.error(f"Error storing product {product_data.id}: {e}")
             return False
     
     def delete_product(self, product_id: int) -> bool:
