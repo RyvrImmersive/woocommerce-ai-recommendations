@@ -417,11 +417,19 @@ class IntelligentAstraClient:
             document = product_data.to_dict()
             document["$vector"] = embedding
             
-            # Upsert the document (insert or update)
-            result = self.products_collection.upsert(
-                document,
-                filter={"product_id": product_data.id}
-            )
+            # Insert or update the document
+            try:
+                # Try to update first
+                result = self.products_collection.update_one(
+                    filter={"product_id": product_data.id},
+                    update={"$set": document}
+                )
+                if result.modified_count == 0:
+                    # If no document was updated, insert new one
+                    result = self.products_collection.insert_one(document)
+            except Exception:
+                # If update fails, try insert
+                result = self.products_collection.insert_one(document)
             
             logger.info(f"Product {product_data.id} stored successfully in AstraDB")
             return True
