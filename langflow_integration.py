@@ -438,26 +438,20 @@ async def sync_product(request: ProductSyncRequest):
         from product_vectorizer import ProductData
         
         product_data = ProductData(
-            product_id=request.product_id,
+            id=request.product_id,
             name=request.name,
             description=request.description,
             short_description=request.short_description or "",
-            price=request.price or 0.0,
-            regular_price=request.regular_price or 0.0,
-            sale_price=request.sale_price or 0.0,
             categories=request.categories,
             tags=request.tags,
-            image_url=request.image_url or "",
-            permalink=request.permalink,
+            price=str(request.price or 0.0),
+            regular_price=str(request.regular_price or 0.0),
+            sale_price=str(request.sale_price) if request.sale_price else None,
             stock_status=request.stock_status,
+            image_url=request.image_url,
+            permalink=request.permalink,
             rating=request.rating,
-            sku=request.sku or "",
-            weight=request.weight or "",
-            dimensions=request.dimensions or {},
-            attributes=request.attributes or {},
-            status=request.status,
-            date_created=request.date_created or datetime.now().isoformat(),
-            date_modified=request.date_modified or datetime.now().isoformat()
+            review_count=0  # Default value since it's not in the request
         )
         
         # Store in AstraDB with vectorization
