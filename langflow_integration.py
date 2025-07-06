@@ -393,4 +393,23 @@ async def health_check():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8001)
+    import logging
+    
+    # Configure logging
+    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger(__name__)
+    
+    # Handle PORT environment variable safely (Railway fix)
+    port_env = os.getenv("PORT", "8001")
+    logger.info(f"Raw PORT env var: '{port_env}'")
+    
+    try:
+        port = int(port_env)
+        logger.info(f"Parsed port: {port}")
+    except (ValueError, TypeError) as e:
+        logger.error(f"Failed to parse PORT '{port_env}': {e}")
+        port = 8001
+        logger.info(f"Using default port: {port}")
+    
+    logger.info(f"Starting intelligent recommendations API on 0.0.0.0:{port}")
+    uvicorn.run(app, host="0.0.0.0", port=port, log_level="info")
