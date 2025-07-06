@@ -7,12 +7,9 @@ pydantic==2.5.0
 
 # Database & Vector Storage
 astrapy==0.7.7
-cassandra-driver==3.28.0
 
 # AI & Embeddings
 openai>=1.6.1
-langchain>=0.1.0
-langchain-openai>=0.0.5
 
 # HTTP Client
 httpx==0.25.2
@@ -20,19 +17,6 @@ requests==2.31.0
 
 # Environment & Configuration
 python-dotenv==1.0.0
-pydantic-settings==2.1.0
 
 # Utilities
-asyncio-throttle==1.0.2
 python-multipart==0.0.6
-typing-extensions==4.8.0
-
-# Development & Testing
-pytest==7.4.3
-pytest-asyncio==0.21.1
-black==23.11.0
-flake8==6.1.0
-
-# Logging & Monitoring
-structlog==23.2.0
-rich==13.7.0
