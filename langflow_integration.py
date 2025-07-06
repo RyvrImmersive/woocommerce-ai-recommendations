@@ -431,8 +431,11 @@ async def health_check():
 async def sync_product(request: ProductSyncRequest):
     """Sync a single product from WooCommerce to AstraDB"""
     try:
+        logger.info(f"Starting sync for product {request.product_id}: {request.name}")
         service_instance = get_service()
+        logger.info("Got service instance")
         await service_instance.initialize()
+        logger.info("Service initialized")
         
         # Convert request to ProductData format
         from product_vectorizer import ProductData
@@ -468,7 +471,10 @@ async def sync_product(request: ProductSyncRequest):
             raise HTTPException(status_code=500, detail="Failed to sync product to AstraDB")
             
     except Exception as e:
-        logger.error(f"Error syncing product {request.product_id}: {e}")
+        error_msg = f"Error syncing product {request.product_id}: {str(e)}"
+        logger.error(error_msg)
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=f"Sync failed: {str(e)}")
 
 @app.post("/api/delete-product")
@@ -491,7 +497,10 @@ async def delete_product(request: ProductDeleteRequest):
             raise HTTPException(status_code=404, detail="Product not found or deletion failed")
             
     except Exception as e:
-        logger.error(f"Error deleting product {request.product_id}: {e}")
+        error_msg = f"Error deleting product {request.product_id}: {str(e)}"
+        logger.error(error_msg)
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=f"Deletion failed: {str(e)}")
 
 @app.get("/api/sync-status")
