@@ -14,6 +14,7 @@ import uuid
 
 import httpx
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
 
@@ -335,6 +336,16 @@ class IntelligentRecommendationService:
 
 # FastAPI app for the service
 app = FastAPI(title="Intelligent Product Recommendations", version="1.0.0")
+
+# Add CORS middleware to allow browser requests
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow all origins for development
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all methods
+    allow_headers=["*"],  # Allow all headers
+)
+
 service = None
 
 def get_service():
