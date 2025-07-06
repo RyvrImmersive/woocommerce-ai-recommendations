@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-Powered Product Recommendations Demo</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 1.2em;
+        }
+        
+        .demo-section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 30px;
+            margin: 20px 0;
+        }
+        
+        .api-test {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 30px;
+        }
+        
+        .test-panel {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            border: 1px solid #e1e5e9;
+        }
+        
+        .test-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        
+        .test-button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+        
+        .test-button:hover {
+            background: #5a6fd8;
+        }
+        
+        .test-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .results {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .product-result {
+            background: white;
+            border: 1px solid #e1e5e9;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        
+        .product-name {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        
+        .relevance-score {
+            background: #e8f5e8;
+            color: #2d5a2d;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+            margin-bottom: 8px;
+        }
+        
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .feature {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid #e1e5e9;
+        }
+        
+        .feature-icon {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            .api-test {
+                grid-template-columns: 1fr;
+            }
+            
+            .container {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧠 AI-Powered Product Recommendations</h1>
+            <p>Intelligent WooCommerce integration with semantic search and AstraDB vector storage</p>
+            <p><strong>Live API:</strong> <code>https://woocommerce-ai-recommendations-production.up.railway.app</code></p>
+        </div>
+
+        <div class="features">
+            <div class="feature">
+                <div class="feature-icon">🔍</div>
+                <h3>Semantic Search</h3>
+                <p>Natural language understanding powered by OpenAI embeddings</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🎯</div>
+                <h3>Relevance Scoring</h3>
+                <p>AI-calculated similarity scores for perfect product matching</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">💾</div>
+                <h3>Vector Storage</h3>
+                <p>AstraDB for lightning-fast semantic product retrieval</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🔄</div>
+                <h3>Session Context</h3>
+                <p>Personalized recommendations based on user interaction history</p>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>🧪 Live API Testing</h2>
+            <p>Test the intelligent search API with natural language queries</p>
+            
+            <div class="api-test">
+                <div class="test-panel">
+                    <h3>Intelligent Search</h3>
+                    <input type="text" id="searchQuery" class="test-input" placeholder="e.g., comfortable chair for elderly person" value="wheelchair for elderly">
+                    <br>
+                    <button onclick="testIntelligentSearch()" class="test-button" id="searchBtn">🔍 Search Products</button>
+                    <div id="searchResults" class="results" style="display: none;"></div>
+                </div>
+                
+                <div class="test-panel">
+                    <h3>Health Check</h3>
+                    <p>Verify API status and connectivity</p>
+                    <button onclick="testHealthCheck()" class="test-button" id="healthBtn">❤️ Check Health</button>
+                    <div id="healthResults" class="results" style="display: none;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>🚀 Integration Ready</h2>
+            <p>Your chatbot is now powered by advanced AI! The enhanced chatbot includes:</p>
+            <ul>
+                <li>✅ <strong>Semantic Understanding:</strong> Understands user intent beyond keywords</li>
+                <li>✅ <strong>Relevance Ranking:</strong> Products ranked by AI similarity scores</li>
+                <li>✅ <strong>Session Memory:</strong> Contextual recommendations based on conversation</li>
+                <li>✅ <strong>Perfect Match Detection:</strong> Highlights products with >85% relevance</li>
+                <li>✅ <strong>Fallback Handling:</strong> Graceful error handling with health checks</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'https://woocommerce-ai-recommendations-production.up.railway.app';
+
+        async function testIntelligentSearch() {
+            const query = document.getElementById('searchQuery').value.trim();
+            const btn = document.getElementById('searchBtn');
+            const results = document.getElementById('searchResults');
+            
+            if (!query) {
+                alert('Please enter a search query');
+                return;
+            }
+            
+            btn.disabled = true;
+            btn.textContent = '🔄 Searching...';
+            results.style.display = 'block';
+            results.innerHTML = '<p>🤖 AI is analyzing your query and finding relevant products...</p>';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/intelligent-search`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        query: query,
+                        session_id: 'demo-session-' + Date.now(),
+                        limit: 5,
+                        filters: {}
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                
+                let html = `<h4>✅ Search Results for: "${query}"</h4>`;
+                html += `<p><strong>Message:</strong> ${data.message || 'Results found!'}</p>`;
+                
+                if (data.products && data.products.length > 0) {
+                    html += `<p><strong>Found ${data.products.length} products:</strong></p>`;
+                    
+                    data.products.forEach((product, index) => {
+                        const relevanceScore = product.relevance_score ? Math.round(product.relevance_score * 100) : 'N/A';
+                        const rankBadge = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`;
+                        
+                        html += `
+                            <div class="product-result">
+                                <div class="product-name">${rankBadge} ${product.name}</div>
+                                <div class="relevance-score">AI Match: ${relevanceScore}%</div>
+                                <p><strong>Price:</strong> ${product.price || 'Price on request'}</p>
+                                <p><strong>Description:</strong> ${product.description ? product.description.substring(0, 200) + '...' : 'No description available'}</p>
+                                ${product.permalink ? `<p><a href="${product.permalink}" target="_blank">View Product →</a></p>` : ''}
+                            </div>
+                        `;
+                    });
+                } else {
+                    html += '<p>No products found for this query.</p>';
+                }
+                
+                if (data.suggestions && data.suggestions.length > 0) {
+                    html += `<p><strong>Suggestions:</strong> ${data.suggestions.join(', ')}</p>`;
+                }
+                
+                results.innerHTML = html;
+                
+            } catch (error) {
+                console.error('Search error:', error);
+                results.innerHTML = `<p style="color: red;">❌ Error: ${error.message}</p>`;
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '🔍 Search Products';
+            }
+        }
+
+        async function testHealthCheck() {
+            const btn = document.getElementById('healthBtn');
+            const results = document.getElementById('healthResults');
+            
+            btn.disabled = true;
+            btn.textContent = '🔄 Checking...';
+            results.style.display = 'block';
+            results.innerHTML = '<p>Checking API health...</p>';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/health`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    results.innerHTML = `
+                        <h4>✅ API Health Check Passed</h4>
+                        <p><strong>Status:</strong> ${data.status}</p>
+                        <p><strong>Port:</strong> ${data.port}</p>
+                        <p><strong>Message:</strong> ${data.message}</p>
+                        <p style="color: green;">🚀 Your AI-powered API is running perfectly!</p>
+                    `;
+                } else {
+                    throw new Error(`Health check failed: ${response.status}`);
+                }
+                
+            } catch (error) {
+                console.error('Health check error:', error);
+                results.innerHTML = `<p style="color: red;">❌ Health check failed: ${error.message}</p>`;
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '❤️ Check Health';
+            }
+        }
+
+        // Auto-run health check on page load
+        window.addEventListener('load', () => {
+            setTimeout(testHealthCheck, 1000);
+        });
+    </script>
+</body>
+</html>

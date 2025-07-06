@@ -33,6 +33,7 @@ class SearchResult:
     tags: List[str]
     price: str
     image_url: Optional[str]
+    permalink: Optional[str]
     similarity_score: float
     stock_status: str
     rating: float
@@ -46,6 +47,7 @@ class SearchResult:
             "tags": self.tags,
             "price": self.price,
             "image": self.image_url,
+            "permalink": self.permalink,
             "similarity": self.similarity_score,
             "inStock": self.stock_status == "instock",
             "rating": self.rating
@@ -180,6 +182,7 @@ class IntelligentAstraClient:
                         tags=result.get("tags", []),
                         price=result["price"],
                         image_url=result.get("image_url"),
+                        permalink=result.get("permalink"),
                         similarity_score=result.get("$similarity", 0.0),
                         stock_status=result.get("stock_status", "outofstock"),
                         rating=result.get("rating", 0.0)
@@ -336,6 +339,7 @@ class IntelligentAstraClient:
                     tags=result.get("tags", []),
                     price=result["price"],
                     image_url=result.get("image_url"),
+                    permalink=result.get("permalink"),
                     similarity_score=1.0,  # Max score for trending
                     stock_status=result.get("stock_status", "outofstock"),
                     rating=result.get("rating", 0.0)
@@ -383,6 +387,7 @@ class IntelligentAstraClient:
                             tags=result.get("tags", []),
                             price=result["price"],
                             image_url=result.get("image_url"),
+                            permalink=result.get("permalink"),
                             similarity_score=result.get("$similarity", 0.0),
                             stock_status=result.get("stock_status", "outofstock"),
                             rating=result.get("rating", 0.0)

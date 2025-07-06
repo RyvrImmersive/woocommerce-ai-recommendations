@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick API Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .result { background: #f5f5f5; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        button { padding: 10px 20px; margin: 5px; background: #007cba; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #005a87; }
+        input { padding: 8px; margin: 5px; width: 300px; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Railway API Quick Test</h1>
+    <p><strong>API URL:</strong> https://woocommerce-ai-recommendations-production.up.railway.app</p>
+    
+    <div>
+        <h3>Health Check</h3>
+        <button onclick="testHealth()">Test Health</button>
+        <div id="healthResult" class="result"></div>
+    </div>
+    
+    <div>
+        <h3>Intelligent Search</h3>
+        <input type="text" id="searchInput" placeholder="Enter search query" value="wheelchair">
+        <button onclick="testSearch()">Test Search</button>
+        <div id="searchResult" class="result"></div>
+    </div>
+
+    <script>
+        const API_URL = 'https://woocommerce-ai-recommendations-production.up.railway.app';
+
+        async function testHealth() {
+            const result = document.getElementById('healthResult');
+            result.innerHTML = 'Testing...';
+            
+            try {
+                const response = await fetch(`${API_URL}/health?t=${Date.now()}`);
+                const data = await response.json();
+                result.innerHTML = `<pre style="color: green;">${JSON.stringify(data, null, 2)}</pre>`;
+                if (data.status === 'healthy') {
+                    result.innerHTML += '<p style="color: green; font-weight: bold;">✅ API is running perfectly!</p>';
+                }
+            } catch (error) {
+                result.innerHTML = `<span style="color: red;">❌ Error: ${error.message}</span>`;
+            }
+        }
+
+        async function testSearch() {
+            const query = document.getElementById('searchInput').value;
+            const result = document.getElementById('searchResult');
+            result.innerHTML = 'Searching...';
+            
+            try {
+                const response = await fetch(`${API_URL}/api/intelligent-search`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        query: query,
+                        session_id: 'test-' + Date.now(),
+                        limit: 3
+                    })
+                });
+                
+                const data = await response.json();
+                result.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+            } catch (error) {
+                result.innerHTML = `<span style="color: red;">Error: ${error.message}</span>`;
+            }
+        }
+
+        // Auto-test health on load
+        window.onload = () => testHealth();
+    </script>
+</body>
+</html>
