@@ -2,5 +2,5 @@
 builder = "nixpacks"
 
 [deploy]
-startCommand = "python langflow_integration.py"
+startCommand = "python simple_app.py"
 restartPolicyType = "on_failure"
