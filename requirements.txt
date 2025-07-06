@@ -1,22 +1,9 @@
-# 🤖 Intelligent WooCommerce Recommendations - Dependencies
-
-# Core Framework
 fastapi==0.104.1
-uvicorn[standard]==0.24.0
+uvicorn==0.24.0
 pydantic==2.5.0
-
-# Database & Vector Storage
 astrapy==0.7.7
-
-# AI & Embeddings
-openai>=1.6.1
-
-# HTTP Client
+openai==1.6.1
 httpx==0.25.2
 requests==2.31.0
-
-# Environment & Configuration
 python-dotenv==1.0.0
-
-# Utilities
 python-multipart==0.0.6
